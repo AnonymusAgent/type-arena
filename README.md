@@ -126,16 +126,6 @@ Development: `npm run dev`. Type safety: `npx next typegen` then `npm exec tsc -
 
 No client-side secrets are used; nothing sensitive is exposed to the browser bundle.
 
-### 4.2 Demo credentials
-
-| Account | Username | Password | Role |
-| --- | --- | --- | --- |
-| Operator | `arena_admin` | `admin1234` | Admin → unlocks `/admin` |
-| Example player | `NovaKeys` | `demo1234` | Player |
-
-Sign in from `/login` **or** `/admin/login` (the latter requires `isAdmin`).
-
----
 
 ## 5. Project structure
 
