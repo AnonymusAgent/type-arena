@@ -93,25 +93,30 @@ export async function seedDatabase() {
     { name: "Monthly Championship", period: "monthly", gameSlug: "multiplayer-arena", prize: "Spaceship + Legend title", entrants: 18220, startsAt: new Date(now), endsAt: new Date(now + 30 * 864e5), status: "open" },
   ]);
 
-  const demoRows = DEMO_PLAYERS.map((p) => ({
-    username: p.username,
-    email: `${p.username.toLowerCase()}@demo.typearena.gg`,
-    passwordHash: hashPassword("demo1234"),
-    country: p.country,
-    avatar: p.avatar,
-    xp: p.xp,
-    coins: 500 + Math.round(p.xp / 20),
-    bestWpm: p.bestWpm,
-    avgWpm: Math.round(p.bestWpm * 0.82),
-    accuracy: p.accuracy,
-    gamesPlayed: p.gamesPlayed,
-    gamesWon: p.gamesWon,
-    streak: p.streak,
-    isDemo: true,
-    title: "Arena Regular",
-  }));
+  // Demo players are opt-in (SEED_DEMO=1) so production databases never ship filler data.
+  const createDemo = process.env.SEED_DEMO === "1";
 
-  const inserted = await db.insert(users).values(demoRows).returning({ id: users.id });
+  let inserted: { id: number }[] = [];
+  if (createDemo) {
+    const demoRows = DEMO_PLAYERS.map((p) => ({
+      username: p.username,
+      email: `${p.username.toLowerCase()}@demo.typearena.gg`,
+      passwordHash: hashPassword("demo1234"),
+      country: p.country,
+      avatar: p.avatar,
+      xp: p.xp,
+      coins: 500 + Math.round(p.xp / 20),
+      bestWpm: p.bestWpm,
+      avgWpm: Math.round(p.bestWpm * 0.82),
+      accuracy: p.accuracy,
+      gamesPlayed: p.gamesPlayed,
+      gamesWon: p.gamesWon,
+      streak: p.streak,
+      isDemo: true,
+      title: "Arena Regular",
+    }));
+    inserted = await db.insert(users).values(demoRows).returning({ id: users.id });
+  }
 
   // Operator account — created only when ADMIN_PASSWORD is set in the environment,
   // so credentials never live in the repository. ADMIN_USERNAME / ADMIN_EMAIL are optional.
@@ -129,7 +134,7 @@ export async function seedDatabase() {
           country: "US",
           avatar: "🛠️",
           isAdmin: true,
-          isDemo: true,
+          isDemo: false,
           xp: 12000,
           coins: 9999,
           bestWpm: 112,
@@ -177,7 +182,7 @@ export async function seedDatabase() {
   );
 
   const adminId = admin[0]?.id;
-  if (adminId) {
+  if (adminId && createDemo) {
     await db.insert(friends).values(
       inserted.slice(0, 6).map((u) => ({ userId: adminId, friendId: u.id, status: "accepted" })),
     );

@@ -125,6 +125,7 @@ Development: `npm run dev`. Type safety: `npx next typegen` then `npm exec tsc -
 | `ADMIN_PASSWORD` | optional | Password for the operator account seeded by `seedDatabase()`. The admin is only seeded when set, so credentials never live in the repo. |
 | `ADMIN_USERNAME` | optional | Username for the seeded operator account (defaults to `type_arena`). |
 | `ADMIN_EMAIL` | optional | Email for the seeded operator account (defaults to `admin@typearena.gg`). |
+| `SEED_DEMO` | optional | Set to `1` to also seed 15 demo players for local/development testing. |
 
 No client-side secrets are used; nothing sensitive is exposed to the browser bundle.
 
@@ -252,8 +253,8 @@ To add a **seventh engine**: create `components/game/<name>-engine.tsx` implemen
 ### 8.1 Demo data vs production data
 `seedDatabase()` in `src/lib/seed.ts` is **idempotent** — it returns early if any row exists in `games` — and is invoked from `ensureSeeded()` before the first read. It creates:
 - the full 16-game catalogue, 12 achievements, 14 cosmetics, 7 challenges, 4 tournaments;
-- 15 realistic **demo players** (`isDemo = true`) with sessions, achievements and friendships;
-- one **operator account** `type_arena` (`isDemo = true`, `isAdmin = true`), seeded from `ADMIN_USERNAME` / `ADMIN_PASSWORD` env vars. When `ADMIN_PASSWORD` is unset, no operator is seeded.
+- 15 realistic **demo players** (`isDemo = true`) with sessions, achievements and friendships — **only when `SEED_DEMO=1`** is set, so fresh databases get no filler accounts by default;
+- one **operator account** (`isAdmin = true`, `isDemo = false`) `type_arena`, seeded from `ADMIN_USERNAME` / `ADMIN_PASSWORD` env vars. When `ADMIN_PASSWORD` is unset, no operator is seeded.
 
 Demo rows are always flagged with `is_demo = true`, shown as `Source: demo` in the admin Users tab, so you can filter or truncate them without touching real users:
 
