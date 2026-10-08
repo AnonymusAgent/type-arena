@@ -156,7 +156,7 @@ src/
 │   ├── providers.tsx            # session, sound, theme, toasts (context)
 │   ├── navbar.tsx bottom-nav.tsx footer.tsx
 │   ├── game-card.tsx game-artwork.tsx page-banner.tsx
-│   ├── hero-typing.tsx scroll-effects.tsx sparkline.tsx xp-bar.tsx
+│   ├── hero-typing.tsx sparkline.tsx xp-bar.tsx
 │   └── game/                    # the reusable engine layer
 │       ├── game-runner.tsx      # idle → playing → results, saves to API
 │       ├── race-engine.tsx      # 3D track, rivals, combo boost

@@ -5,7 +5,6 @@ import { GAMES } from "@/lib/games";
 import GameCard from "@/components/game-card";
 import GameArtwork from "@/components/game-artwork";
 import HeroTyping from "@/components/hero-typing";
-import ScrollEffects from "@/components/scroll-effects";
 import { ACHIEVEMENTS, TIER_COLORS } from "@/lib/achievements";
 import { getCatalogue, getChallenges, getLeaderboard, getPlatformStats } from "@/lib/data";
 
@@ -43,7 +42,6 @@ export default async function HomePage() {
 
   return (
     <div className="w-full">
-      <ScrollEffects />
       <section className="landing-hero border-b border-[var(--border)]">
         <div className="mx-auto grid w-full max-w-[1440px] items-center gap-8 px-4 pb-10 pt-12 sm:px-7 lg:grid-cols-[minmax(0,.95fr)_minmax(0,1.05fr)] lg:gap-6 lg:pb-16 lg:pt-20 xl:gap-10">
           <div className="relative z-10 min-w-0 slide-up">
@@ -176,7 +174,7 @@ export default async function HomePage() {
         <div className="grid gap-3 md:grid-cols-3">{TESTIMONIALS.map((t) => <figure key={t.name} className="card-hover flex flex-col rounded-2xl border border-[var(--border)] bg-[var(--panel)] p-5 sm:p-6"><div className="mb-6 flex gap-1 text-[var(--brand)]" aria-label="5 out of 5 stars">★★★★★</div><blockquote className="flex-1 text-sm leading-relaxed">“{t.text}”</blockquote><figcaption className="mt-5 flex items-center gap-3 border-t border-[var(--border)] pt-4"><span className="grid h-10 w-10 place-items-center rounded-lg bg-[var(--panel-solid)] text-xl">{t.avatar}</span><span><strong className="block text-sm">{t.name}</strong><small className="text-[var(--muted)]">{t.role}</small></span></figcaption></figure>)}</div>
       </HomeSection>
 
-      <section data-reveal className="mx-auto w-full max-w-7xl px-4 pb-6 pt-16 sm:px-6 sm:pt-24">
+      <section className="mx-auto w-full max-w-7xl px-4 pb-6 pt-16 sm:px-6 sm:pt-24">
         <div className="home-cta px-6 py-12 text-center sm:px-12 sm:py-16">
           <span className="section-index">{"// YOUR ARENA AWAITS"}</span>
           <h2 className="mx-auto mt-4 max-w-3xl text-4xl font-bold leading-[1.03] tracking-tighter sm:text-5xl">The next Keyboard Legend<br /><span className="text-[var(--brand)]">could be you.</span></h2>
@@ -191,7 +189,7 @@ export default async function HomePage() {
 
 function HomeSection({ number, title, subtitle, href, cta, children }: { number: string; title: string; subtitle: string; href?: string; cta?: string; children: React.ReactNode }) {
   return (
-    <section data-reveal className="home-section mx-auto w-full max-w-7xl px-4 sm:px-6">
+    <section className="home-section mx-auto w-full max-w-7xl px-4 sm:px-6">
       <div className="mb-6 flex flex-wrap items-end justify-between gap-4 sm:mb-8">
         <div className="min-w-0"><span className="section-index">{`// ${number}`}</span><h2 className="section-heading mt-3">{title}</h2><p className="section-kicker mt-2 text-sm sm:text-base">{subtitle}</p></div>
         {href && cta && <Link href={href} className="inline-flex min-h-11 items-center gap-2 border-b border-[var(--brand)] font-mono text-[10px] font-bold tracking-wider text-[var(--brand)] hover:gap-3">{cta} <ArrowUpRight size={16} /></Link>}

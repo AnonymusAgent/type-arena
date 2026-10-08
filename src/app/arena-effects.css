@@ -324,5 +324,4 @@ main:has(.game-playing) nav[aria-label="Breadcrumb"] { display: none; }
 @media (prefers-reduced-motion: reduce) {
   .hero-scene__image, .hero-scene__terminal, .hero-scene__speed, .hero-scene__key { transform: none; }
   .hero-scene__terminal { left: 5%; }.game-art__key { transform: rotateX(15deg) rotateY(-12deg); }
-  .scroll-effects-ready [data-reveal] { opacity: 1; transform: none; }
 }
