@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
-import { adminAccessCodeExpected, safeAdminRedirect } from "@/lib/admin";
+import { safeAdminRedirect } from "@/lib/admin";
 import AdminLoginForm from "./admin-login-form";
 
 export const dynamic = "force-dynamic";
@@ -23,7 +23,7 @@ export default async function AdminLoginPage({ searchParams }: { searchParams: P
 
   return (
     <div className="bg-grid flex min-h-[calc(100dvh-64px)] w-full items-center justify-center px-4 py-12">
-      <AdminLoginForm next={next} accessCodeRequired={adminAccessCodeExpected()} signedInAs={user ? user.username : null} />
+      <AdminLoginForm next={next} signedInAs={user ? user.username : null} />
     </div>
   );
 }

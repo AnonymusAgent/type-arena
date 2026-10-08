@@ -39,7 +39,7 @@ It is built with **Next.js 16 (App Router) + TypeScript + Tailwind CSS 4 + Drizz
 - `< 768px`: **bottom navigation bar** (Home / Games / Test / Ranks / Me) with `env(safe-area-inset-bottom)` support.
 
 ### 2.2 Homepage sections
-Hero (headline `TYPE FASTER. PLAY HARDER. BECOME #1.` + animated 3D arena scene + PLAY NOW / TYPING TEST / EXPLORE GAMES) → scrolling ticker → Featured Games → Popular Games → Multiplayer Arena → Daily Challenges → Typing Test → How It Works → Leaderboard preview → Achievements preview → Testimonials → CTA → footer. Every section reveals on scroll with a 3D tilt.
+Hero (headline `TYPE FASTER. PLAY HARDER. BECOME #1.` + animated 3D arena scene + PLAY NOW / TYPING TEST / EXPLORE GAMES) → scrolling ticker → Featured Games → Popular Games → Multiplayer Arena → Daily Challenges → Typing Test → How It Works → Leaderboard preview → Achievements preview → Testimonials → CTA → footer.
 
 ### 2.3 The games (`/games`, `/games/[slug]`)
 
@@ -122,7 +122,9 @@ Development: `npm run dev`. Type safety: `npx next typegen` then `npm exec tsc -
 | Variable | Required | Purpose |
 | --- | --- | --- |
 | `DATABASE_URL` | ✅ | PostgreSQL connection string, e.g. `postgresql://postgres:postgres@127.0.0.1:5432/app_db` |
-| `ADMIN_ACCESS_CODE` | optional | Second factor for `/admin/login`. If set, an “Operator key” field appears and must match exactly (timing-safe compare). If unset, a valid administrator account is sufficient. |
+| `ADMIN_PASSWORD` | optional | Password for the operator account seeded by `seedDatabase()`. The admin is only seeded when set, so credentials never live in the repo. |
+| `ADMIN_USERNAME` | optional | Username for the seeded operator account (defaults to `type_arena`). |
+| `ADMIN_EMAIL` | optional | Email for the seeded operator account (defaults to `admin@typearena.gg`). |
 
 No client-side secrets are used; nothing sensitive is exposed to the browser bundle.
 
@@ -135,7 +137,7 @@ src/
 │   ├── layout.tsx               # root layout, metadata, providers, nav/footer
 │   ├── page.tsx                 # homepage (all landing sections)
 │   ├── globals.css              # theme tokens, buttons, panels, base animations
-│   ├── arena-effects.css        # 3D scenes, scroll effects, game fields, banners
+│   ├── arena-effects.css        # 3D scenes, game fields, banners
 │   ├── icon.svg                 # brand favicon
 │   ├── sitemap.ts / robots.ts   # SEO infrastructure
 │   ├── games/
@@ -173,7 +175,7 @@ src/
 │   ├── achievements.ts          # achievement definitions + tiers
 │   ├── data.ts                  # server data access, seeding guard
 │   ├── auth.ts                  # sessions, hashing, getCurrentUser
-│   └── admin.ts                 # admin guard, operator key, throttling
+│   └── admin.ts                 # admin guard + throttling
 ├── db/
 │   ├── schema.ts                # 13 Drizzle tables
 │   └── index.ts                 # pooled drizzle client
@@ -212,8 +214,8 @@ To add a **seventh engine**: create `components/game/<name>-engine.tsx` implemen
 | --- | --- | --- |
 | `POST /api/auth/signup` | public | Create account (≥3-char username, valid email, ≥6-char password), starts session |
 | `POST /api/auth/login` | public | Login by username **or** email; rotates the session (same session type for players and operators) |
-| `POST /api/auth/admin-login` | public | Admin-only sign-in: role check, optional operator key, throttled, sanitised `next` redirect |
-| `GET /api/auth/admin-login` | public | Reports whether an operator key is configured |
+| `POST /api/auth/admin-login` | public | Admin-only sign-in: role check, throttled, sanitised `next` redirect |
+| `GET /api/auth/admin-login` | public | Reports admin sign-in endpoint health |
 | `GET /api/auth/me` | cookie | Current user + level (also used to confirm a sign-in “stuck”) |
 | `POST /api/auth/logout` | cookie | Revoke the session row, expire both session cookies and legacy cookies |
 | `POST /api/sessions` | optional | Save a run; grants XP/coins, updates streak, evaluates achievements, notifies |
@@ -251,7 +253,7 @@ To add a **seventh engine**: create `components/game/<name>-engine.tsx` implemen
 `seedDatabase()` in `src/lib/seed.ts` is **idempotent** — it returns early if any row exists in `games` — and is invoked from `ensureSeeded()` before the first read. It creates:
 - the full 16-game catalogue, 12 achievements, 14 cosmetics, 7 challenges, 4 tournaments;
 - 15 realistic **demo players** (`isDemo = true`) with sessions, achievements and friendships;
-- one **operator account** `type_arena` (`isDemo = true`, `isAdmin = true`).
+- one **operator account** `type_arena` (`isDemo = true`, `isAdmin = true`), seeded from `ADMIN_USERNAME` / `ADMIN_PASSWORD` env vars. When `ADMIN_PASSWORD` is unset, no operator is seeded.
 
 Demo rows are always flagged with `is_demo = true`, shown as `Source: demo` in the admin Users tab, so you can filter or truncate them without touching real users:
 
@@ -271,7 +273,7 @@ The control panel is genuinely locked, not cosmetic.
 2. **Sign-in page uses the same check** — `/admin/login` is server-rendered and redirects to the dashboard **only when the same check positively finds an admin**. Because both pages ask the identical question, they can never disagree, so a redirect loop is structurally impossible.
 3. **Per-route API guards** — every `/api/admin/*` handler re-runs the check (`401` unauthenticated, `403` authenticated-but-not-admin), so direct `curl`/Postman access is blocked.
 4. **Request proxy (`src/proxy.ts`, Next 16’s successor to middleware)** — never redirects pages. It (a) refuses state-changing `/api/*` requests the browser marks `Sec-Fetch-Site: cross-site` (falling back to an Origin-vs-Host check on older browsers) → **CSRF protection**, and (b) returns a fast `401` for `/api/admin/*` requests that carry no session cookie at all.
-5. **Sign-in hardening** — the account’s stored role must be administrator (`isAdmin` is never read from the client); failures are throttled to **5 per 10 minutes per IP**; the optional operator key uses a timing-safe compare; `next` is sanitised to admin paths only (no `//evil.com` open redirects, no bouncing back to the sign-in page); every sign-in **rotates** the session (old tokens are revoked).
+5. **Sign-in hardening** — the account’s stored role must be administrator (`isAdmin` is never read from the client); failures are throttled to **5 per 10 minutes per IP**; `next` is sanitised to admin paths only (no `//evil.com` open redirects, no bouncing back to the sign-in page); every sign-in **rotates** the session (old tokens are revoked).
 6. **Nothing sensitive leaks** — passwords are `scrypt` + per-user salt with timing-safe verification; `publicUser()` strips `passwordHash`; admin pages are `noindex` with generic titles; `/api` is disallowed in `robots.ts`; logout deletes the session row, so a copied token stops working immediately.
 
 ### 9.1 Session cookies
@@ -293,7 +295,6 @@ Cookies are only carriers; revoking the database row ends the session everywhere
 | “Redirected you too many times” (older builds) | A leftover `ta_admin` hint cookie disagreed with an expired session | Fixed structurally (see 9). Use **“Stuck? Reset sign-in and clear session cookies”** on `/admin/login`, or clear site data once. |
 | “You’re signed in as X, which isn’t an administrator account” | You’re logged in as a player | Sign in with an admin account on the same form — it switches accounts. |
 | “Too many attempts” | 5 failed attempts in 10 minutes from your IP | Wait 10 minutes (or restart the server in development). |
-| “Incorrect operator key” | `ADMIN_ACCESS_CODE` is set on the server | Enter the configured key, or unset the variable. |
 
 To grant admin access to a real user:
 
@@ -301,7 +302,7 @@ To grant admin access to a real user:
 UPDATE users SET is_admin = true WHERE username = 'your_handle';
 ```
 
-To rotate the operator key: set `ADMIN_ACCESS_CODE` in `.env` and restart — the field appears on the sign-in form automatically.
+To seed (or reseed) the operator account: set `ADMIN_USERNAME` and `ADMIN_PASSWORD` in `.env` and restart — `seedDatabase()` only creates it for a fresh database (`games` empty).
 
 ---
 
@@ -311,7 +312,7 @@ To rotate the operator key: set `ADMIN_ACCESS_CODE` in `.env` and restart — th
 - **Type**: Space Grotesk (600/700 display, tight `-0.07em` tracking) + Space Mono for telemetry, labels and HUD numerals.
 - **Surfaces**: 1px borders, inner top highlight, deep soft shadows, restrained glassmorphism, 9–26px radii.
 - **3D layer** (`arena-effects.css`): real `perspective` + `rotateX/rotateY` on game cards (isometric keycap diorama with travelling grid floor and light rings), a pointer-parallax hero (image, floating keycaps, HUD terminal, speed plate), a perspective race circuit with animated floor and glowing vehicle trails, raised word tiles in the arcade field, and 3D multiplayer lanes.
-- **Scroll**: one `IntersectionObserver` + one passive `scroll` listener drives section reveals, a top progress bar and hero parallax. Both are skipped entirely under reduced motion.
+- **Scroll**: standard native scrolling — no smooth-scroll override, no scroll-linked effects (the old progress bar and reveal-on-scroll were removed). `overflow-x: clip` on `html/body` prevents horizontal drift.
 - **Micro-interactions**: card lift + glow, button lift, pop/slide/shake keyframes, animated caret, live counters, combo flashes, countdown bursts.
 
 ---

@@ -1,4 +1,3 @@
-import nodeCrypto from "crypto";
 import { getCurrentUser, type CurrentUser } from "@/lib/auth";
 
 export type AdminUser = CurrentUser;
@@ -21,22 +20,6 @@ export function safeAdminRedirect(next: string | null | undefined): string {
   if (!/^\/admin(?:[/?#]|$)/.test(next)) return "/admin";
   if (/^\/admin\/login(?:[/?#]|$)/.test(next)) return "/admin";
   return next;
-}
-
-/**
- * Optional shared operator key. When ADMIN_ACCESS_CODE is configured it must be supplied at
- * /admin/login in addition to valid administrator credentials; when unset it is not required.
- */
-export function adminAccessCodeExpected(): boolean {
-  return Boolean(process.env.ADMIN_ACCESS_CODE && process.env.ADMIN_ACCESS_CODE.trim().length > 0);
-}
-
-export function verifyAdminAccessCode(submitted: string): boolean {
-  const expected = process.env.ADMIN_ACCESS_CODE?.trim();
-  if (!expected) return true;
-  const a = Buffer.from(submitted.trim());
-  const b = Buffer.from(expected);
-  return a.length === b.length && nodeCrypto.timingSafeEqual(a, b);
 }
 
 /* ------------------------------ attempt throttling ----------------------------- */

@@ -3,14 +3,7 @@ import { eq, or } from "drizzle-orm";
 import { db } from "@/db";
 import { users } from "@/db/schema";
 import { createSession, verifyPassword } from "@/lib/auth";
-import {
-  adminAccessCodeExpected,
-  attemptsRemaining,
-  clearAttempts,
-  registerFailedAttempt,
-  safeAdminRedirect,
-  verifyAdminAccessCode,
-} from "@/lib/admin";
+import { attemptsRemaining, clearAttempts, registerFailedAttempt, safeAdminRedirect } from "@/lib/admin";
 import { ensureSeeded } from "@/lib/data";
 
 export const dynamic = "force-dynamic";
@@ -18,7 +11,7 @@ export const dynamic = "force-dynamic";
 const NO_STORE = { "Cache-Control": "no-store" };
 
 export async function GET() {
-  return NextResponse.json({ accessCodeRequired: adminAccessCodeExpected() }, { headers: NO_STORE });
+  return NextResponse.json({ ok: true }, { headers: NO_STORE });
 }
 
 export async function POST(req: Request) {
@@ -33,7 +26,6 @@ export async function POST(req: Request) {
   const body = await req.json().catch(() => ({}));
   const identifier = String(body.identifier ?? "").trim();
   const password = String(body.password ?? "");
-  const accessCode = String(body.accessCode ?? "");
   const redirect = safeAdminRedirect(typeof body.next === "string" ? body.next : null);
 
   const fail = (message: string) => {
@@ -54,7 +46,6 @@ export async function POST(req: Request) {
 
   if (!account || !verifyPassword(password, account.passwordHash)) return fail("Invalid admin credentials.");
   if (!account.isAdmin) return fail("This account does not have administrator access.");
-  if (adminAccessCodeExpected() && !verifyAdminAccessCode(accessCode)) return fail("Incorrect operator key.");
 
   clearAttempts(key);
   // A normal database session — admin rights are re-derived from users.is_admin on every request.

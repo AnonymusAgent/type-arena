@@ -2,15 +2,14 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { ExternalLink, Info, KeyRound, Lock, RotateCcw, ShieldAlert, User } from "lucide-react";
+import { ExternalLink, Info, Lock, RotateCcw, ShieldAlert, User } from "lucide-react";
 import { checkSession, isEmbeddedFrame } from "@/lib/session-client";
 
-type Props = { next: string; accessCodeRequired: boolean; signedInAs: string | null };
+type Props = { next: string; signedInAs: string | null };
 
-export default function AdminLoginForm({ next, accessCodeRequired, signedInAs }: Props) {
+export default function AdminLoginForm({ next, signedInAs }: Props) {
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
-  const [accessCode, setAccessCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [cookieBlocked, setCookieBlocked] = useState(false);
@@ -32,7 +31,7 @@ export default function AdminLoginForm({ next, accessCodeRequired, signedInAs }:
         headers: { "Content-Type": "application/json" },
         credentials: "same-origin",
         cache: "no-store",
-        body: JSON.stringify({ identifier, password, accessCode, next }),
+        body: JSON.stringify({ identifier, password, next }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -138,24 +137,6 @@ export default function AdminLoginForm({ next, accessCodeRequired, signedInAs }:
             />
           </span>
         </label>
-
-        {accessCodeRequired && (
-          <label className="block">
-            <span className="mb-1.5 block font-mono text-[10px] font-bold uppercase tracking-wider text-[var(--muted)]">Operator key</span>
-            <span className="flex items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--panel)] px-3 focus-within:border-[#c5fb56]">
-              <KeyRound size={16} className="shrink-0 text-[var(--muted)]" aria-hidden="true" />
-              <input
-                type="password"
-                value={accessCode}
-                onChange={(e) => setAccessCode(e.target.value)}
-                required
-                aria-label="Operator key"
-                className="h-12 min-w-0 flex-1 bg-transparent font-mono text-sm outline-none"
-                placeholder="ADMIN_ACCESS_CODE"
-              />
-            </span>
-          </label>
-        )}
       </div>
 
       <button className="btn btn-primary mt-6 w-full" disabled={busy || resetting}>

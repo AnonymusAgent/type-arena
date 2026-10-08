@@ -113,28 +113,35 @@ export async function seedDatabase() {
 
   const inserted = await db.insert(users).values(demoRows).returning({ id: users.id });
 
-  // demo admin account
-  const admin = await db
-    .insert(users)
-    .values({
-      username: "type_arena",
-      email: "admin@typearena.gg",
-      passwordHash: hashPassword("P@ssw0rd@#$"),
-      country: "US",
-      avatar: "🛠️",
-      isAdmin: true,
-      isDemo: true,
-      xp: 12000,
-      coins: 9999,
-      bestWpm: 112,
-      avgWpm: 94,
-      accuracy: 96.5,
-      gamesPlayed: 300,
-      gamesWon: 120,
-      streak: 9,
-      title: "Arena Operator",
-    })
-    .returning({ id: users.id });
+  // Operator account — created only when ADMIN_PASSWORD is set in the environment,
+  // so credentials never live in the repository. ADMIN_USERNAME / ADMIN_EMAIL are optional.
+  const adminUsername = process.env.ADMIN_USERNAME?.trim() || "type_arena";
+  const adminPassword = process.env.ADMIN_PASSWORD?.trim();
+  const adminEmail = process.env.ADMIN_EMAIL?.trim() || "admin@typearena.gg";
+
+  const admin = adminPassword
+    ? await db
+        .insert(users)
+        .values({
+          username: adminUsername,
+          email: adminEmail,
+          passwordHash: hashPassword(adminPassword),
+          country: "US",
+          avatar: "🛠️",
+          isAdmin: true,
+          isDemo: true,
+          xp: 12000,
+          coins: 9999,
+          bestWpm: 112,
+          avgWpm: 94,
+          accuracy: 96.5,
+          gamesPlayed: 300,
+          gamesWon: 120,
+          streak: 9,
+          title: "Arena Operator",
+        })
+        .returning({ id: users.id })
+    : [];
 
   const sessionsRows: (typeof gameSessions.$inferInsert)[] = [];
   inserted.forEach((u, idx) => {
