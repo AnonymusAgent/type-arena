@@ -29,7 +29,7 @@ export default function AdminClient({ stats, players, recent, achievements, chal
 
   const guard = () => {
     if (!user?.isAdmin) {
-      toast("Admin access required. Log in as arena_admin / admin1234.", "error");
+      toast("Admin access required. Log in with the operator account.", "error");
       return false;
     }
     return true;

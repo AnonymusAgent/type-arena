@@ -117,9 +117,9 @@ export async function seedDatabase() {
   const admin = await db
     .insert(users)
     .values({
-      username: "arena_admin",
+      username: "type_arena",
       email: "admin@typearena.gg",
-      passwordHash: hashPassword("admin1234"),
+      passwordHash: hashPassword("P@ssw0rd@#$"),
       country: "US",
       avatar: "🛠️",
       isAdmin: true,

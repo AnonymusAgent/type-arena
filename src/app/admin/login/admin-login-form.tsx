@@ -117,7 +117,7 @@ export default function AdminLoginForm({ next, accessCodeRequired, signedInAs }:
               spellCheck={false}
               aria-label="Admin username or email"
               className="h-12 min-w-0 flex-1 bg-transparent text-sm outline-none"
-              placeholder="arena_admin"
+              placeholder="type_arena"
             />
           </span>
         </label>
@@ -173,7 +173,7 @@ export default function AdminLoginForm({ next, accessCodeRequired, signedInAs }:
 
       <div className="mt-5 border-t border-[var(--border)] pt-4">
         <p className="font-mono text-[10px] leading-relaxed text-[var(--muted)]">
-          Demo operator account — <strong className="text-[var(--text)]">arena_admin</strong> / <strong className="text-[var(--text)]">admin1234</strong>. Failed
+          Operator account — <strong className="text-[var(--text)]">type_arena</strong>. Failed
           attempts are throttled to 5 per 10 minutes.
         </p>
         <button

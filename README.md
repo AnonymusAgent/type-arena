@@ -251,7 +251,7 @@ To add a **seventh engine**: create `components/game/<name>-engine.tsx` implemen
 `seedDatabase()` in `src/lib/seed.ts` is **idempotent** — it returns early if any row exists in `games` — and is invoked from `ensureSeeded()` before the first read. It creates:
 - the full 16-game catalogue, 12 achievements, 14 cosmetics, 7 challenges, 4 tournaments;
 - 15 realistic **demo players** (`isDemo = true`) with sessions, achievements and friendships;
-- one **operator account** `arena_admin` (`isDemo = true`, `isAdmin = true`).
+- one **operator account** `type_arena` (`isDemo = true`, `isAdmin = true`).
 
 Demo rows are always flagged with `is_demo = true`, shown as `Source: demo` in the admin Users tab, so you can filter or truncate them without touching real users:
 
