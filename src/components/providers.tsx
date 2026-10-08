@@ -35,7 +35,7 @@ type Ctx = {
 
 const AppCtx = createContext<Ctx | null>(null);
 
-export type SoundName = "key" | "error" | "combo" | "start" | "finish" | "levelup" | "achievement" | "countdown" | "victory";
+export type SoundName = "key" | "error" | "combo" | "start" | "finish" | "levelup" | "achievement" | "countdown" | "victory" | "kill";
 
 const TONES: Record<SoundName, { f: number; d: number; type: OscillatorType }> = {
   key: { f: 620, d: 0.04, type: "square" },
@@ -47,6 +47,7 @@ const TONES: Record<SoundName, { f: number; d: number; type: OscillatorType }> =
   achievement: { f: 1180, d: 0.3, type: "triangle" },
   countdown: { f: 440, d: 0.15, type: "sine" },
   victory: { f: 1320, d: 0.4, type: "triangle" },
+  kill: { f: 1560, d: 0.35, type: "sawtooth" },
 };
 
 export function Providers({ children }: { children: React.ReactNode }) {

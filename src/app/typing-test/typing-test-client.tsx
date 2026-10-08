@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import TextCore from "@/components/game/text-core";
 import { Stat } from "@/components/game/hud";
+import { ResultFX } from "@/components/game/game-effects";
 import type { GameResult } from "@/components/game/types";
 import { CODE_SNIPPETS, makeNumberToken, makeSymbolToken, randomSentence, randomWords } from "@/lib/words";
 import { useApp } from "@/components/providers";
@@ -57,8 +58,11 @@ export default function TypingTestClient() {
   if (result) {
     const extra = result.extra ?? {};
     return (
-      <div className="panel slide-up rounded-3xl p-5 sm:p-8">
-        <h2 className="text-center text-3xl font-black sm:text-4xl">WELL DONE!</h2>
+      <div className={`result-panel ${result.won ? "" : "result-panel--lose"} panel rounded-3xl p-5 sm:p-8`}>
+        <ResultFX won={result.won} accent="#22d3ee" />
+        <h2 className={`result-heading text-center text-3xl font-black sm:text-4xl ${result.won ? "result-heading--win" : "result-heading--lose"}`}>
+          {result.won ? "🏆 VICTORY!" : "💀 DEFEAT"}
+        </h2>
         <p className="mt-1 text-center text-sm text-[var(--muted)]">
           {activeDuration}s · {mode} mode
         </p>

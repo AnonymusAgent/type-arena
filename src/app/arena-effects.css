@@ -223,6 +223,9 @@ main:has(.game-playing) nav[aria-label="Breadcrumb"] { display: none; }
 .arcade-enemy--boss .arcade-enemy__model { background: linear-gradient(145deg,#8a3755,#3a152c); border-color: #fe7496; box-shadow: 0 6px 0 #42152d,0 13px 18px -7px #000,0 0 24px #f43f5e77; }
 .arcade-enemy--power .arcade-enemy__model { background: linear-gradient(145deg,#226f80,#123b4a); border-color: #6ee8f0; box-shadow: 0 6px 0 #123d4f,0 13px 18px -7px #000,0 0 24px #22d3ee77; }
 .arcade-enemy--golden .arcade-enemy__model { background: linear-gradient(145deg,#856a28,#493c1c); border-color: #f8d875; box-shadow: 0 6px 0 #55451c,0 13px 18px -7px #000,0 0 24px #eab30877; }
+.arcade-enemy--kill .arcade-enemy__model { background: linear-gradient(145deg,#7a1f2e,#2b0a16); border-color: #ff7792; box-shadow: 0 6px 0 #3a0f1d,0 13px 18px -7px #000,0 0 26px #f43f5e99; animation: enemyHover 2.1s ease-in-out infinite, killGlow 1.1s ease-in-out infinite; }
+.arcade-enemy--kill .arcade-enemy__word { color: #ffd7de; text-shadow: 0 0 12px rgba(244,63,94,.8); }
+@keyframes killGlow { 50% { box-shadow: 0 6px 0 #3a0f1d,0 13px 18px -7px #000,0 0 44px #f43f5e; } }
 .arcade-enemy__word { max-width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 700 clamp(10px,2.7vw,14px) "Space Mono", monospace; }
 .arcade-enemy__icon { font-size: 24px; line-height: 1.2; filter: drop-shadow(0 3px 4px #0009); }
 .arcade-field__base { position: absolute; z-index: 3; display: flex; align-items: center; justify-content: center; gap: 8px; color: #fff; background: linear-gradient(90deg,rgba(201,102,95,.15),rgba(74,86,136,.35),rgba(201,102,95,.15)); border-top: 2px solid rgba(249,150,131,.55); font: 700 9px "Space Mono",monospace; letter-spacing: .1em; text-transform: uppercase; box-shadow: 0 -8px 20px rgba(239,110,79,.11); }
@@ -243,6 +246,47 @@ main:has(.game-playing) nav[aria-label="Breadcrumb"] { display: none; }
 .multiplayer-3d-track::before { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px); background-size: 40px 100%; transform: skewX(-20deg); }
 .multiplayer-3d-track__lane { position: relative; height: 36px; overflow: visible; border-radius: 7px; border: 1px solid rgba(210,230,255,.15); background: linear-gradient(135deg,rgba(54,65,91,.48),rgba(20,29,47,.6)); transform: perspective(800px) rotateX(17deg); box-shadow: 0 5px 0 #0a1324,0 10px 12px -8px #000; }
 .multiplayer-3d-track__car { position: absolute; top: 0; font-size: 22px; transition: left .14s linear; animation: carBob .65s ease-in-out infinite; filter: drop-shadow(0 5px 5px #000); }
+
+/* Kill / hit / escape bursts — Type Ninja's "kill" word and arcade damage feedback */
+.burst { position: absolute; z-index: 6; width: 120px; height: 120px; pointer-events: none; transform: translate(-50%, -50%); }
+.burst__ring, .burst__ring::after { position: absolute; inset: 0; border-radius: 50%; border: 3px solid var(--burst, #22d3ee); box-shadow: 0 0 26px var(--burst, #22d3ee); animation: burstRing .5s cubic-bezier(.2,.8,.3,1) both; }
+.burst__ring::after { content: ""; inset: -34px; border-width: 1px; opacity: 0; animation-delay: .05s; }
+.burst--gold { --burst: #facc15; }
+.burst--boss { --burst: #fb7185; }
+.burst--red { --burst: #f43f5e; }
+.burst--cyan { --burst: #22d3ee; }
+.burst__spark { position: absolute; top: 50%; left: 50%; width: var(--s, 6px); height: var(--s, 6px); border-radius: 2px; background: var(--burst, #22d3ee); animation: burstSpark .5s ease-out var(--d, 0s) both; }
+.burst__label { position: absolute; left: 50%; top: 50%; white-space: nowrap; color: #fff; font: 700 15px "Space Mono", monospace; letter-spacing: .08em; text-shadow: 0 0 16px var(--burst), 0 2px 4px #000; animation: burstText .6s ease-out both; }
+@keyframes burstRing { from { transform: scale(.18); opacity: 1; } to { transform: scale(1); opacity: 0; } }
+@keyframes burstSpark {
+  from { transform: translate(-50%,-50%) translate(0,0) rotate(0deg); opacity: 1; }
+  to { transform: translate(-50%,-50%) translate(var(--tx), var(--ty)) rotate(var(--r)); opacity: 0; }
+}
+@keyframes burstText { 0% { opacity: 0; transform: translate(-50%,-50%) scale(.4); } 35% { opacity: 1; transform: translate(-50%,-50%) scale(1.25); } 100% { opacity: 0; transform: translate(-50%,-50%) scale(1.5) translateY(-10px); } }
+
+/* Screen-level flash overlays used inside game arenas */
+.arena-flash { position: absolute; inset: 0; z-index: 5; border-radius: inherit; pointer-events: none; opacity: 0; }
+.arena-flash--hit, .arena-flash--escape { background: radial-gradient(circle at 50% 100%, rgba(244,63,94,.42), transparent 72%); animation: flashFade .45s ease-out; }
+.arena-flash--power, .arena-flash--gold { background: radial-gradient(circle, rgba(251,191,36,.3), transparent 68%); animation: flashFade .5s ease-out; }
+.arena-flash--kill { background: radial-gradient(circle at 50% 50%, rgba(251,191,36,.42), rgba(244,63,94,.28) 55%, transparent 78%); animation: flashFade .6s ease-out; }
+@keyframes flashFade { 0% { opacity: 1; } 100% { opacity: 0; } }
+
+/* Win / lose result screens */
+.confetti { position: absolute; inset: 0; z-index: 5; overflow: hidden; border-radius: inherit; pointer-events: none; }
+.confetti__piece { position: absolute; top: -22px; left: 0; border-radius: 2px; box-shadow: 0 0 6px rgba(255,255,255,.35); opacity: 0; animation: confettiFall var(--dur, 2.2s) cubic-bezier(.2,.6,.35,1) var(--d, 0s) both; }
+@keyframes confettiFall {
+  0% { opacity: 1; transform: translate3d(0, 0, 0) rotate(0deg); }
+  100% { opacity: 0; transform: translate3d(var(--drift, 30px), 130%, 0) rotate(var(--rot, 480deg)); }
+}
+.defeat-vignette { position: absolute; inset: 0; z-index: 4; border-radius: inherit; pointer-events: none; background: radial-gradient(ellipse at 50% 42%, transparent 42%, rgba(136,16,42,.38) 100%); animation: defeatIn 1s ease both; }
+@keyframes defeatIn { from { opacity: 0; } to { opacity: 1; } }
+.result-panel { position: relative; overflow: hidden; animation: slideUp .45s ease both; }
+.result-panel--lose { animation: slideUp .45s ease both, loseShake .7s 1.05s ease both; }
+@keyframes loseShake { 0%,100% { transform: translateX(0); } 20% { transform: translateX(-7px); } 40% { transform: translateX(7px); } 60% { transform: translateX(-4px); } 80% { transform: translateX(3px); } }
+.result-heading { position: relative; z-index: 6; }
+.result-heading--win { color: #f6ffcf; text-shadow: 0 0 26px rgba(197,251,86,.6), 0 2px 0 rgba(150,110,0,.3); animation: winPulse 1.6s ease-in-out infinite; }
+.result-heading--lose { color: #ffc2ce; text-shadow: 0 0 24px rgba(244,63,94,.6); }
+@keyframes winPulse { 50% { text-shadow: 0 0 46px rgba(197,251,86,.95), 0 2px 0 rgba(150,110,0,.3); } }
 
 @media (max-width: 1023px) {
   .hero-scene { height: 460px; }

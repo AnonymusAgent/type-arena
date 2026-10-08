@@ -5,23 +5,27 @@ import { EngineProps } from "./types";
 import { HudRow, Stat, TypingInput, ProgressBar } from "./hud";
 import { randomWords } from "@/lib/words";
 import { useApp } from "../providers";
+import { BurstFX, BurstTone } from "./game-effects";
 
 type Entity = {
   id: number;
   word: string;
   pos: number; // 0 -> 100 approach
   speed: number;
-  kind: "normal" | "boss" | "power" | "golden";
+  kind: "normal" | "boss" | "power" | "golden" | "kill";
   lane: number;
 };
 
-let seq = 0;
+type Burst = { id: number; x: number; y: number; tone: BurstTone; label?: string };
 
-const THEME_ICONS: Record<string, { normal: string; boss: string; power: string; golden: string; base: string; title: string }> = {
-  classic: { normal: "🟣", boss: "🟥", power: "⚡", golden: "⭐", base: "🧱", title: "Floor" },
-  zombie: { normal: "🧟", boss: "👹", power: "⚡", golden: "💊", base: "🚧", title: "Barricade" },
-  defender: { normal: "🛸", boss: "🛰️", power: "⚡", golden: "🔋", base: "🏰", title: "Reactor core" },
-  ninja: { normal: "🍥", boss: "🐉", power: "⚡", golden: "🌟", base: "🥷", title: "Dojo" },
+let seq = 0;
+let fxSeq = 0;
+
+const THEME_ICONS: Record<string, { normal: string; boss: string; power: string; golden: string; kill: string; base: string; title: string }> = {
+  classic: { normal: "🟣", boss: "🟥", power: "⚡", golden: "⭐", kill: "💥", base: "🧱", title: "Floor" },
+  zombie: { normal: "🧟", boss: "👹", power: "⚡", golden: "💊", kill: "🔥", base: "🚧", title: "Barricade" },
+  defender: { normal: "🛸", boss: "🛰️", power: "⚡", golden: "🔋", kill: "☢️", base: "🏰", title: "Reactor core" },
+  ninja: { normal: "🍥", boss: "🐉", power: "⚡", golden: "🌟", kill: "🗡️", base: "🥷", title: "Dojo" },
 };
 
 export default function FallingEngine({ config, onFinish }: EngineProps) {
@@ -44,26 +48,55 @@ export default function FallingEngine({ config, onFinish }: EngineProps) {
   const [attempts, setAttempts] = useState(0);
   const [slowUntil, setSlowUntil] = useState(0);
   const [flash, setFlash] = useState("");
+  const [shaking, setShaking] = useState(false);
+  const [bursts, setBursts] = useState<Burst[]>([]);
+  const flashTimer = useRef<number | null>(null);
   const over = useRef(false);
   const livesRef = useRef(lives);
   livesRef.current = lives;
+
+  const triggerFlash = useCallback((name: string, ms = 400) => {
+    if (flashTimer.current) clearTimeout(flashTimer.current);
+    setFlash(name);
+    flashTimer.current = window.setTimeout(() => setFlash(""), ms);
+  }, []);
+
+  const pushBurst = useCallback((b: Omit<Burst, "id">) => {
+    const id = ++fxSeq;
+    setBursts((prev) => [...prev, { ...b, id }]);
+    window.setTimeout(() => setBursts((prev) => prev.filter((x) => x.id !== id)), 700);
+  }, []);
+
+  // Absolute (% coord) point of an entity inside the field, for FX anchoring.
+  const pointOf = (lane: number, pos: number) =>
+    horizontal ? { x: Math.max(2, 100 - pos), y: 9 + lane * 17 } : { x: 7 + lane * 18, y: Math.min(91, pos) };
+  // Where an escaped enemy hits the base.
+  const escapePoint = useCallback((lane: number) => (horizontal ? { x: 3, y: 9 + lane * 17 } : { x: 7 + lane * 18, y: 91 }), [horizontal]);
 
   const spawn = useCallback(
     (forceBoss = false): Entity => {
       const tier = wave > 8 ? "hard" : wave > 4 ? "medium" : "common";
       const roll = Math.random();
-      const kind: Entity["kind"] = forceBoss ? "boss" : roll > 0.94 ? "power" : roll > 0.86 && config.special ? "golden" : "normal";
-      const word = kind === "boss" ? randomWords("hard", 1)[0] : kind === "power" ? "power" : randomWords(tier, 1)[0];
+      const kind: Entity["kind"] = forceBoss
+        ? "boss"
+        : roll > 0.94
+          ? "power"
+          : roll > 0.86 && config.special
+            ? "golden"
+            : theme === "ninja" && roll > 0.78
+              ? "kill"
+              : "normal";
+      const word = kind === "boss" ? randomWords("hard", 1)[0] : kind === "power" ? "power" : kind === "kill" ? "kill" : randomWords(tier, 1)[0];
       return {
         id: ++seq,
         word,
         pos: 0,
-        speed: (kind === "boss" ? 0.22 : 0.3 + Math.random() * 0.25) + wave * 0.035,
+        speed: (kind === "boss" ? 0.22 : kind === "kill" ? 0.2 + Math.random() * 0.12 : 0.3 + Math.random() * 0.25) + wave * 0.035,
         kind,
         lane: Math.floor(Math.random() * 5),
       };
     },
-    [config.special, wave],
+    [config.special, theme, wave],
   );
 
   const finish = useCallback(() => {
@@ -95,6 +128,11 @@ export default function FallingEngine({ config, onFinish }: EngineProps) {
           .filter((e) => {
             if (e.pos < 100) return true;
             if (e.kind !== "power") {
+              const p = escapePoint(e.lane);
+              pushBurst({ x: p.x, y: p.y, tone: e.kind === "kill" ? "cyan" : "red", label: e.kind === "kill" ? "WASTED" : "ESCAPED" });
+              triggerFlash("escape", 500);
+              setShaking(true);
+              window.setTimeout(() => setShaking(false), 350);
               setLives((l) => {
                 const nl = l - (e.kind === "boss" ? 2 : 1);
                 if (nl <= 0) setTimeout(finish, 0);
@@ -102,8 +140,6 @@ export default function FallingEngine({ config, onFinish }: EngineProps) {
               });
               setCombo(0);
               play("error");
-              setFlash("hit");
-              setTimeout(() => setFlash(""), 300);
             }
             return false;
           });
@@ -113,7 +149,7 @@ export default function FallingEngine({ config, onFinish }: EngineProps) {
       });
     }, 100);
     return () => clearInterval(id);
-  }, [finish, play, slowUntil, spawn, wave]);
+  }, [escapePoint, finish, play, pushBurst, slowUntil, spawn, triggerFlash, wave]);
 
   useEffect(() => {
     if (kills > 0 && kills % 8 === 0) {
@@ -149,7 +185,8 @@ export default function FallingEngine({ config, onFinish }: EngineProps) {
       play("combo");
     } else {
       const mult = 1 + Math.min(2, combo / 8);
-      const base = hit.kind === "boss" ? 300 : hit.kind === "golden" ? hit.word.length * 45 : hit.word.length * 15;
+      const base =
+        hit.kind === "kill" ? 400 : hit.kind === "boss" ? 300 : hit.kind === "golden" ? hit.word.length * 45 : hit.word.length * 15;
       setScore((s) => s + Math.round(base * mult));
       setKills((k) => k + 1);
       setCombo((c) => {
@@ -158,7 +195,20 @@ export default function FallingEngine({ config, onFinish }: EngineProps) {
         if (n % 5 === 0) play("combo");
         return n;
       });
-      play("key");
+      if (hit.kind === "kill") {
+        const p = pointOf(hit.lane, hit.pos);
+        pushBurst({ x: p.x, y: p.y, tone: "gold", label: "KILL!!" });
+        triggerFlash("kill", 650);
+        play("kill");
+      } else if (hit.kind === "boss") {
+        const p = pointOf(hit.lane, hit.pos);
+        pushBurst({ x: p.x, y: p.y, tone: "boss", label: "BOSS DOWN" });
+        play("levelup");
+      } else {
+        const p = pointOf(hit.lane, hit.pos);
+        pushBurst({ x: p.x, y: p.y, tone: hit.kind === "golden" ? "gold" : "cyan" });
+        play("key");
+      }
     }
     setInput("");
   };
@@ -174,8 +224,8 @@ export default function FallingEngine({ config, onFinish }: EngineProps) {
         <Stat label="Time" value={`${elapsed.toFixed(0)}s`} />
       </HudRow>
 
-      <div className={`arcade-field arcade-field--${theme} relative h-[320px] w-full sm:h-[380px] ${flash === "hit" ? "shake" : ""}`} aria-label={`${icons.title} game field`}>
-        <span className="arcade-field__status" aria-hidden="true">{`// ${theme.toUpperCase()} MODE · WAVE ${String(wave).padStart(2, "0")}`}</span>
+      <div className={`arcade-field arcade-field--${theme} relative h-[320px] w-full sm:h-[380px] ${shaking ? "shake" : ""}`} aria-label={`${icons.title} game field`}>
+        <span className="arcade-field__status" aria-hidden="true">{`// ${theme.toUpperCase()} MODE · WAVE ${String(wave).padStart(2, "0")}${theme === "ninja" ? ' · TYPE "KILL" FOR A MASSIVE HIT' : ""}`}</span>
         {entities.map((e) => {
           const style = horizontal
             ? { right: `${Math.min(96, e.pos)}%`, top: `${9 + e.lane * 17}%` }
@@ -187,6 +237,10 @@ export default function FallingEngine({ config, onFinish }: EngineProps) {
             </div>
           </div>;
         })}
+        {bursts.map((b) => (
+          <BurstFX key={b.id} x={b.x} y={b.y} tone={b.tone} label={b.label} />
+        ))}
+        {(flash === "escape" || flash === "power" || flash === "kill") && <div className={`arena-flash arena-flash--${flash}`} aria-hidden="true" />}
         <div className={`arcade-field__base ${horizontal ? "arcade-field__base--left" : "arcade-field__base--bottom"}`} aria-label={icons.title}>
           <span aria-hidden="true">{icons.base}</span><span>{theme === "defender" ? "CORE" : theme === "zombie" ? "DEFEND" : "BASE"}</span>
         </div>

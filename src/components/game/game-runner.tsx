@@ -9,6 +9,7 @@ import type { GameResult } from "./types";
 import { useApp } from "../providers";
 import { Stat } from "./hud";
 import { AchievementDef } from "@/lib/achievements";
+import { ResultFX } from "./game-effects";
 
 const RaceEngine = dynamic(() => import("./race-engine"), { ssr: false });
 const StreamEngine = dynamic(() => import("./stream-engine"), { ssr: false });
@@ -94,9 +95,14 @@ export default function GameRunner({ game }: { game: GameDef }) {
 
   if (phase === "done" && result) {
     return (
-      <div className="panel slide-up rounded-3xl p-5 sm:p-8">
-        <h2 className="text-center text-3xl font-black">{result.won ? "🏆 VICTORY!" : "WELL DONE!"}</h2>
-        <p className="mt-1 text-center text-sm text-[var(--muted)]">{game.name} run complete</p>
+      <div className={`result-panel ${result.won ? "" : "result-panel--lose"} panel rounded-3xl p-5 sm:p-8`}>
+        <ResultFX won={result.won} accent={game.accent} />
+        <h2 className={`result-heading text-center text-3xl font-black ${result.won ? "result-heading--win" : "result-heading--lose"}`}>
+          {result.won ? "🏆 VICTORY!" : "💀 DEFEAT"}
+        </h2>
+        <p className="mt-1 text-center text-sm text-[var(--muted)]">
+          {result.won ? "Champion performance — the arena is yours." : `${game.name} run complete — retry to claim victory.`}
+        </p>
         <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
           <Stat label="WPM" value={result.wpm} accent={game.accent} />
           <Stat label="Accuracy" value={`${result.accuracy}%`} />

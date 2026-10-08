@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useApp } from "@/components/providers";
 import { HudRow, Stat } from "@/components/game/hud";
+import { ResultFX } from "@/components/game/game-effects";
 import { randomSentence } from "@/lib/words";
 import { calcWpm } from "@/lib/progression";
 
@@ -221,9 +222,13 @@ export default function MultiplayerClient() {
 
   if (phase === "results") {
     const place = standings.findIndex((r) => !r.bot) + 1;
+    const won = place === 1;
     return (
-      <div className="panel slide-up rounded-3xl p-5 sm:p-8">
-        <h2 className="text-center text-3xl font-black">{place === 1 ? "🥇 VICTORY!" : `#${place} FINISH`}</h2>
+      <div className={`result-panel ${won ? "" : "result-panel--lose"} panel rounded-3xl p-5 sm:p-8`}>
+        <ResultFX won={won} accent="#fb7185" />
+        <h2 className={`result-heading text-center text-3xl font-black ${won ? "result-heading--win" : "result-heading--lose"}`}>
+          {won ? "🥇 VICTORY!" : `#${place} FINISH`}
+        </h2>
         <div className="mt-5 space-y-2">
           {standings.map((r, i) => (
             <div key={r.id} className={`flex items-center gap-3 rounded-xl border p-3 ${r.bot ? "border-[var(--border)] bg-[var(--panel)]" : "border-[#fb7185] bg-[#fb7185]/10"}`}>

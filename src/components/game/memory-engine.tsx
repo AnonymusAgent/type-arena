@@ -5,6 +5,7 @@ import { EngineProps } from "./types";
 import { HudRow, Stat, TypingInput } from "./hud";
 import { randomWords } from "@/lib/words";
 import { useApp } from "../providers";
+import { BurstFX } from "./game-effects";
 
 export default function MemoryEngine({ config, onFinish }: EngineProps) {
   const { play } = useApp();
@@ -20,6 +21,8 @@ export default function MemoryEngine({ config, onFinish }: EngineProps) {
   const [mistakes, setMistakes] = useState(0);
   const [attempts, setAttempts] = useState(0);
   const [countdown, setCountdown] = useState(4);
+  const [hitFlash, setHitFlash] = useState(false);
+  const [celebrate, setCelebrate] = useState(false);
   const over = useRef(false);
 
   useEffect(() => {
@@ -71,6 +74,8 @@ export default function MemoryEngine({ config, onFinish }: EngineProps) {
       play("combo");
       setScore((s) => s + sequence.length * 50 * round);
       setChars((c) => c + sequence.join("").length);
+      setCelebrate(true);
+      window.setTimeout(() => setCelebrate(false), 500);
       const next = round + 1;
       setRound(next);
       setSequence(randomWords("common", startLength + next - 1));
@@ -78,6 +83,8 @@ export default function MemoryEngine({ config, onFinish }: EngineProps) {
     } else {
       play("error");
       setMistakes((m) => m + 1);
+      setHitFlash(true);
+      window.setTimeout(() => setHitFlash(false), 400);
       setLives((l) => {
         const nl = l - 1;
         if (nl <= 0) setTimeout(() => finish(false), 0);
@@ -99,7 +106,9 @@ export default function MemoryEngine({ config, onFinish }: EngineProps) {
         <Stat label="Mistakes" value={mistakes} />
       </HudRow>
 
-      <div className="memory-field grid min-h-[220px] place-items-center rounded-xl border border-[var(--border)] p-6">
+      <div className={`memory-field relative grid min-h-[220px] overflow-hidden place-items-center rounded-xl border border-[var(--border)] p-6 ${hitFlash ? "shake" : ""}`}>
+        {hitFlash && <div className="arena-flash arena-flash--hit" aria-hidden="true" />}
+        {celebrate && <BurstFX x={50} y={45} tone="cyan" label="CORRECT" />}
         {phase === "show" ? (
           <div className="text-center">
             <p className="mb-3 text-xs font-bold uppercase tracking-widest text-[var(--muted)]">Memorise — hides in {countdown}s</p>

@@ -19,10 +19,15 @@ dist/
 # Misc
 .DS_Store
 *.log
+*.err
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+
+# Local AI tooling
+.agents/
+skills-lock.json
 
 # IDE
 .vscode/
@@ -43,3 +48,4 @@ Desktop.ini
 
 # TypeScript
 *.tsbuildinfo
+.neon

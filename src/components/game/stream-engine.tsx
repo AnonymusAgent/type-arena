@@ -29,6 +29,7 @@ export default function StreamEngine({ config, onFinish }: EngineProps) {
   const [chars, setChars] = useState(0);
   const [mistakes, setMistakes] = useState(0);
   const [keystrokes, setKeystrokes] = useState(0);
+  const [hitFlash, setHitFlash] = useState(false);
   const over = useRef(false);
 
   const makeToken = useCallback((): Token => {
@@ -72,6 +73,8 @@ export default function StreamEngine({ config, onFinish }: EngineProps) {
           .map((t) => ({ ...t, life: t.life - 100 }))
           .filter((t) => {
             if (t.life > 0) return true;
+            setHitFlash(true);
+            window.setTimeout(() => setHitFlash(false), 380);
             setLives((l) => {
               const nl = l - 1;
               if (nl <= 0) setTimeout(finish, 0);
@@ -158,7 +161,7 @@ export default function StreamEngine({ config, onFinish }: EngineProps) {
         </div>
       )}
 
-      <div className="blitz-field grid grid-cols-1 content-start gap-4 sm:grid-cols-2 lg:grid-cols-3" aria-label="3D word arena">
+      <div className={`blitz-field grid grid-cols-1 content-start gap-4 sm:grid-cols-2 lg:grid-cols-3 ${hitFlash ? "shake" : ""}`} aria-label="3D word arena">
         {tokens.map((t) => (
           <div key={t.id} className="blitz-tile">
             <div className="mb-1 flex items-center justify-between font-mono text-[9px] font-bold tracking-wider text-[#8db4c0]"><span>WORD / {String(t.id).padStart(3, "0")}</span><span>{Math.ceil(t.life / 1000)}s</span></div>
@@ -166,6 +169,7 @@ export default function StreamEngine({ config, onFinish }: EngineProps) {
             <div className="mt-3"><ProgressBar value={(t.life / t.max) * 100} color={t.life / t.max < 0.3 ? "#f47f91" : "#63e5e4"} label={`Time left for ${t.text}`} /></div>
           </div>
         ))}
+        {hitFlash && <div className="arena-flash arena-flash--hit" aria-hidden="true" />}
       </div>
 
       <TypingInput
