@@ -213,11 +213,13 @@ export async function getPlatformStats() {
   await ensureSeeded();
   const [u] = await db.select({ c: sql<number>`count(*)::int` }).from(users);
   const [s] = await db.select({ c: sql<number>`count(*)::int`, avg: sql<number>`coalesce(avg(wpm),0)::float` }).from(gameSessions);
+  // Real database counts only. Earlier versions multiplied these by large constants and
+  // added invented baselines, which displayed fabricated player/race totals on the homepage.
   return {
-    players: (u?.c ?? 0) * 1437 + 48210,
-    races: (s?.c ?? 0) * 913 + 1284300,
-    avgWpm: Math.round(s?.avg ?? 64),
-    games: 16,
+    players: u?.c ?? 0,
+    races: s?.c ?? 0,
+    avgWpm: s?.c ? Math.round(s.avg) : 0,
+    games: GAMES.length,
   };
 }
 

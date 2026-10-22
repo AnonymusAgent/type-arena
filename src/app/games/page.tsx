@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import PageBanner from "@/components/page-banner";
+import AdUnit from "@/components/ads/ad-unit";
 import { getCatalogue } from "@/lib/data";
 import GamesBrowser from "./games-browser";
 
@@ -9,6 +10,7 @@ export const metadata: Metadata = {
   title: "Game Library — Every Typing Game",
   description: "Browse the full Type Arena library: typing races, arcade word games, survival modes, programming drills, number and symbol practice, kids games and multiplayer battles.",
   openGraph: { title: "Type Arena Game Library", description: "Original typing games across twelve categories." },
+  alternates: { canonical: "/games" },
 };
 
 export default async function GamesPage({ searchParams }: { searchParams: Promise<{ sort?: string }> }) {
@@ -24,6 +26,7 @@ export default async function GamesPage({ searchParams }: { searchParams: Promis
       <div className="mt-7">
         <GamesBrowser games={catalogue} initialSort={sp.sort ?? "popular"} />
       </div>
+      <AdUnit placement="content" format="auto" minHeightClass="min-h-[250px] sm:min-h-[200px]" className="mt-10" />
     </div>
   );
 }

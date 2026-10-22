@@ -10,6 +10,7 @@ import { useApp } from "../providers";
 import { Stat } from "./hud";
 import { AchievementDef } from "@/lib/achievements";
 import { ResultFX } from "./game-effects";
+import { trackEvent } from "@/lib/analytics";
 
 const RaceEngine = dynamic(() => import("./race-engine"), { ssr: false });
 const StreamEngine = dynamic(() => import("./stream-engine"), { ssr: false });
@@ -32,6 +33,7 @@ export default function GameRunner({ game }: { game: GameDef }) {
       setResult(r);
       setPhase("done");
       setBest((b) => Math.max(b, r.score));
+      trackEvent("game_complete", { game: game.slug, score: r.score, wpm: r.wpm, accuracy: r.accuracy });
       try {
         const res = await fetch("/api/sessions", {
           method: "POST",
@@ -64,6 +66,7 @@ export default function GameRunner({ game }: { game: GameDef }) {
   );
 
   const start = () => {
+    trackEvent("game_start", { game: game.slug });
     setAttempt((a) => a + 1);
     setResult(null);
     setRewards(null);

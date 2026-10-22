@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "About, Contact & FAQ",
   description: "Learn about Type Arena, contact the team and read answers to frequently asked questions about our typing games and leaderboards.",
+  alternates: { canonical: "/about" },
 };
 
 const FAQ = [

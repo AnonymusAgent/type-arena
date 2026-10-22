@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import PageBanner from "@/components/page-banner";
+import AdUnit from "@/components/ads/ad-unit";
 import PracticeClient from "./practice-client";
 
 export const metadata: Metadata = {
@@ -13,6 +14,7 @@ export default function PracticePage() {
     <div className="mx-auto w-full max-w-7xl px-3 py-6 sm:px-6 sm:py-10">
       <PageBanner label="TRAINING LAB / DAILY DRILLS" title="Build your muscle memory." description="Focused drills, live mistake analysis and custom exercises that target your weakest keys." glyph="🎯" accent="#b8f23e" compact />
       <div className="mt-6"><PracticeClient /></div>
+      <AdUnit placement="content" format="auto" minHeightClass="min-h-[250px]" className="mt-10" />
     </div>
   );
 }

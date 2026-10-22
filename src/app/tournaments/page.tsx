@@ -9,6 +9,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "Tournaments — Daily, Weekend, Weekly & Monthly",
   description: "Compete in Type Arena tournaments for leaderboard glory and exclusive cosmetic rewards.",
+  alternates: { canonical: "/tournaments" },
 };
 
 export default async function TournamentsPage() {
@@ -33,9 +34,7 @@ export default async function TournamentsPage() {
                 <span className="rounded-lg bg-emerald-500/15 px-2 py-1 text-[10px] font-bold uppercase text-emerald-400">{t.status}</span>
               </div>
               <p className="mt-3 text-sm">🎁 Prize: {t.prize}</p>
-              <p className="text-xs text-[var(--muted)]">
-                👥 {t.entrants.toLocaleString()} entrants · ends {new Date(t.endsAt).toLocaleDateString()}
-              </p>
+              <p className="text-xs text-[var(--muted)]">Ends {new Date(t.endsAt).toLocaleDateString()}</p>
               <Link href={`/games/${t.gameSlug}`} className="btn btn-primary mt-4">
                 Play qualifier
               </Link>

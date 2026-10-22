@@ -6,6 +6,7 @@ import GameCard from "@/components/game-card";
 import GameArtwork from "@/components/game-artwork";
 import HeroTyping from "@/components/hero-typing";
 import { ACHIEVEMENTS, TIER_COLORS } from "@/lib/achievements";
+import AdUnit from "@/components/ads/ad-unit";
 import { getCatalogue, getChallenges, getLeaderboard, getPlatformStats } from "@/lib/data";
 
 export const dynamic = "force-dynamic";
@@ -13,13 +14,8 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "Type Arena — Type Faster. Play Harder. Become #1.",
   description: "Play 16 competitive typing games, race opponents, take professional WPM tests, earn XP and coins, unlock achievements and climb the global leaderboard.",
+  alternates: { canonical: "/" },
 };
-
-const TESTIMONIALS = [
-  { name: "Priya S.", role: "Software engineer", text: "I went from 58 to 94 WPM in six weeks. The weak-key drills are scary accurate.", avatar: "👩‍💻" },
-  { name: "Mr. Dalton", role: "Grade 6 teacher", text: "My whole class begs for Alphabet Adventure. Progress tracking makes reporting trivial.", avatar: "🧑‍🏫" },
-  { name: "Kenji T.", role: "Ranked #12 global", text: "Multiplayer Arena is the closest thing to esports for keyboards. The ladder is addictive.", avatar: "🐲" },
-];
 
 const STEPS = [
   { title: "Pick your arena", text: "Choose from 16 games. From precision practice to full-send arcade chaos.", icon: Gamepad2 },
@@ -59,16 +55,22 @@ export default async function HomePage() {
             </div>
             <div className="hero-people mt-9">
               <span className="hero-people__avatars" aria-hidden="true"><span>🦊</span><span>🐼</span><span>🐺</span><span>🐲</span></span>
-              <span><strong>{Math.round(stats.players / 1000)}k+</strong> players are already in the arena</span>
+              <span>
+                {stats.players > 0 ? (
+                  <><strong>{stats.players.toLocaleString()}</strong> registered players — free to join</>
+                ) : (
+                  <>Free to play. <strong>No account needed</strong> to start.</>
+                )}
+              </span>
             </div>
           </div>
           <div className="relative min-w-0 slide-up" style={{ animationDelay: ".12s" }}><HeroTyping /></div>
         </div>
         <dl className="hero-metrics mx-auto grid max-w-[1440px] grid-cols-2 gap-x-4 gap-y-5 px-4 py-6 sm:grid-cols-4 sm:px-7 lg:py-8">
           {[
-            { label: "ACTIVE PLAYERS", value: `${Math.round(stats.players / 1000)}K+`, icon: Users },
-            { label: "RACES COMPLETED", value: `${(stats.races / 1e6).toFixed(1)}M+`, icon: Activity },
-            { label: "AVG. SPEED", value: `${stats.avgWpm} WPM`, icon: Zap },
+            { label: "REGISTERED PLAYERS", value: stats.players.toLocaleString(), icon: Users },
+            { label: "SESSIONS PLAYED", value: stats.races.toLocaleString(), icon: Activity },
+            { label: "AVG. SPEED", value: stats.avgWpm > 0 ? `${stats.avgWpm} WPM` : "—", icon: Zap },
             { label: "ORIGINAL GAMES", value: `${catalogue.length}`, icon: Gamepad2 },
           ].map((item) => (
             <div key={item.label} className="flex items-center gap-3 sm:gap-4">
@@ -127,6 +129,8 @@ export default async function HomePage() {
         </div>
       </HomeSection>
 
+      <AdBreak />
+
       <HomeSection number="04 / THE BENCHMARK" title="Know your numbers." subtitle="A professional typing test wrapped in a much more exciting experience.">
         <div className="grid gap-5 rounded-[26px] border border-[var(--border)] bg-[var(--panel)] p-5 sm:p-8 lg:grid-cols-[.9fr_1.1fr] lg:items-center">
           <div>
@@ -164,14 +168,63 @@ export default async function HomePage() {
         </div>
       </HomeSection>
 
+      <AdBreak />
+
       <HomeSection number="07 / THE TROPHY ROOM" title="Skill looks good on you." subtitle="Achievements for the quick, the consistent and the unstoppable." href="/achievements" cta="SEE ALL ACHIEVEMENTS">
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
           {ACHIEVEMENTS.slice(0, 6).map((a) => <div key={a.code} className="card-hover rounded-2xl border border-[var(--border)] bg-[var(--panel)] p-4 text-center"><div className="text-3xl" aria-hidden="true">{a.icon}</div><h3 className="mt-2 text-sm font-bold">{a.name}</h3><p className="mt-1 text-[11px] leading-relaxed text-[var(--muted)]">{a.description}</p><span className="mt-3 inline-block rounded px-2 py-1 font-mono text-[9px] font-bold uppercase tracking-wider" style={{ background: `${TIER_COLORS[a.tier]}22`, color: TIER_COLORS[a.tier] }}>{a.tier}</span></div>)}
         </div>
       </HomeSection>
 
-      <HomeSection number="08 / THE COMMUNITY" title="Made for the makers of momentum." subtitle="Students, gamers and professionals are finding their rhythm here.">
-        <div className="grid gap-3 md:grid-cols-3">{TESTIMONIALS.map((t) => <figure key={t.name} className="card-hover flex flex-col rounded-2xl border border-[var(--border)] bg-[var(--panel)] p-5 sm:p-6"><div className="mb-6 flex gap-1 text-[var(--brand)]" aria-label="5 out of 5 stars">★★★★★</div><blockquote className="flex-1 text-sm leading-relaxed">“{t.text}”</blockquote><figcaption className="mt-5 flex items-center gap-3 border-t border-[var(--border)] pt-4"><span className="grid h-10 w-10 place-items-center rounded-lg bg-[var(--panel-solid)] text-xl">{t.avatar}</span><span><strong className="block text-sm">{t.name}</strong><small className="text-[var(--muted)]">{t.role}</small></span></figcaption></figure>)}</div>
+      <HomeSection number="08 / THE FIELD GUIDE" title="A better way to get faster." subtitle="Original notes from the people who build the arena.">
+        <div className="grid gap-3 md:grid-cols-3">
+          <article className="card-hover rounded-2xl border border-[var(--border)] bg-[var(--panel)] p-5 sm:p-6">
+            <h3 className="text-lg font-bold">Start where your hands rest</h3>
+            <p className="mt-2 text-sm leading-relaxed text-[var(--muted)]">
+              Most speed gains come from the home row. Before chasing a high WPM, run the{" "}
+              <Link href="/practice" className="text-[var(--brand)] underline underline-offset-2">home-row drill</Link>{" "}
+              until <em>a s d f</em> and <em>j k l ;</em> stop needing your eyes. Accuracy first, speed second — every typing coach
+              agrees, and the scoring in every Type Arena game rewards the same thing.
+            </p>
+          </article>
+          <article className="card-hover rounded-2xl border border-[var(--border)] bg-[var(--panel)] p-5 sm:p-6">
+            <h3 className="text-lg font-bold">Read your numbers honestly</h3>
+            <p className="mt-2 text-sm leading-relaxed text-[var(--muted)]">
+              WPM counts correct characters ÷ 5 per minute; accuracy is correct keystrokes ÷ total keystrokes. A fast run with 88%
+              accuracy is usually slower in real work than a calm run at 98%. The{" "}
+              <Link href="/typing-test" className="text-[var(--brand)] underline underline-offset-2">typing test</Link>{" "}
+              shows both, plus consistency — the number that tells you whether your speed is repeatable.
+            </p>
+          </article>
+          <article className="card-hover rounded-2xl border border-[var(--border)] bg-[var(--panel)] p-5 sm:p-6">
+            <h3 className="text-lg font-bold">Make it a habit, not a sprint</h3>
+            <p className="mt-2 text-sm leading-relaxed text-[var(--muted)]">
+              Ten focused minutes a day beats one long session a week. Pick one{" "}
+              <Link href="/games" className="text-[var(--brand)] underline underline-offset-2">game</Link>{" "}
+              for fun, one drill for weaknesses, and let the daily missions in your dashboard handle the rest. Streaks are there to
+              make consistency the default.
+            </p>
+          </article>
+        </div>
+
+        <div className="mt-5 rounded-2xl border border-[var(--border)] bg-[var(--panel)] p-5 text-sm leading-relaxed text-[var(--muted)] sm:p-7">
+          <h3 className="text-lg font-bold text-[var(--text)]">About Type Arena</h3>
+          <p className="mt-2">
+            Type Arena is an independent typing platform built by Webloom Inc. It combines a professional typing test, a training lab
+            with targeted drills, sixteen original browser games and a competitive multiplayer mode in one lightweight web app that
+            runs entirely in the browser — there is nothing to download and no account is required to play. Accounts are optional and
+            exist to store progress, XP, achievements and leaderboard positions.
+          </p>
+          <p className="mt-2">
+            The site is funded by advertising, which is why a small number of clearly labelled ad placements appear between content
+            sections and never inside a game, a typing test or its controls. You can read exactly what is stored and how advertising
+            works in our{" "}
+            <Link href="/legal/privacy" className="text-[var(--brand)] underline underline-offset-2">Privacy Policy</Link>, review the{" "}
+            <Link href="/legal/terms" className="text-[var(--brand)] underline underline-offset-2">Terms of Service</Link>, or change your
+            choices at any time in{" "}
+            <Link href="/legal/cookies" className="text-[var(--brand)] underline underline-offset-2">Cookie Settings</Link>.
+          </p>
+        </div>
       </HomeSection>
 
       <section className="mx-auto w-full max-w-7xl px-4 pb-6 pt-16 sm:px-6 sm:pt-24">
@@ -183,6 +236,14 @@ export default async function HomePage() {
           <p className="mt-5 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 font-mono text-[10px] text-[var(--muted)]"><Sparkles size={12} aria-hidden="true" /> FREE TO PLAY. BUILT TO IMPROVE. <span className="opacity-60">· A PRODUCT OF WEBLOOM INC.</span></p>
         </div>
       </section>
+    </div>
+  );
+}
+
+function AdBreak() {
+  return (
+    <div className="mx-auto w-full max-w-7xl px-4 sm:px-6">
+      <AdUnit placement="home" format="horizontal" minHeightClass="min-h-[120px] sm:min-h-[100px]" className="my-6 sm:my-10" />
     </div>
   );
 }

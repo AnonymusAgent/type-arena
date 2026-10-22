@@ -8,6 +8,8 @@ import { ResultFX } from "@/components/game/game-effects";
 import type { GameResult } from "@/components/game/types";
 import { CODE_SNIPPETS, makeNumberToken, makeSymbolToken, randomSentence, randomWords } from "@/lib/words";
 import { useApp } from "@/components/providers";
+import AdUnit from "@/components/ads/ad-unit";
+import { trackEvent } from "@/lib/analytics";
 
 const DURATIONS = [15, 30, 60, 120, 300];
 const MODES = ["words", "sentences", "paragraph", "numbers", "symbols", "code"] as const;
@@ -45,6 +47,13 @@ export default function TypingTestClient() {
   const onFinish = async (r: GameResult) => {
     setResult(r);
     setRunning(false);
+    trackEvent("typing_test_complete", {
+      mode,
+      duration_sec: activeDuration,
+      wpm: r.wpm,
+      accuracy: r.accuracy,
+      signed_in: Boolean(user),
+    });
     const res = await fetch("/api/sessions", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -58,7 +67,8 @@ export default function TypingTestClient() {
   if (result) {
     const extra = result.extra ?? {};
     return (
-      <div className={`result-panel ${result.won ? "" : "result-panel--lose"} panel rounded-3xl p-5 sm:p-8`}>
+      <>
+        <div className={`result-panel ${result.won ? "" : "result-panel--lose"} panel rounded-3xl p-5 sm:p-8`}>
         <ResultFX won={result.won} accent="#22d3ee" />
         <h2 className={`result-heading text-center text-3xl font-black sm:text-4xl ${result.won ? "result-heading--win" : "result-heading--lose"}`}>
           {result.won ? "🏆 VICTORY!" : "💀 DEFEAT"}
@@ -120,7 +130,10 @@ export default function TypingTestClient() {
             ⚔️ Challenge friend
           </Link>
         </div>
-      </div>
+        </div>
+        {/* The only ad on this page: below the finished results, never during a test. */}
+        <AdUnit placement="results" format="auto" lazy={false} minHeightClass="min-h-[280px] sm:min-h-[250px]" />
+      </>
     );
   }
 

@@ -4,6 +4,7 @@ import { notFound, redirect } from "next/navigation";
 import GameRunner from "@/components/game/game-runner";
 import GameCard from "@/components/game-card";
 import PageBanner from "@/components/page-banner";
+import AdUnit from "@/components/ads/ad-unit";
 import { getCatalogue, getCatalogueGame } from "@/lib/data";
 
 // Rendered on demand so that games added, renamed or unpublished in the control panel
@@ -40,12 +41,15 @@ export default async function GamePage({ params }: { params: Promise<{ slug: str
 
       <PageBanner label={`${game.category} / ${game.difficulty}`} title={game.name} description={game.description} glyph={game.icon} accent={game.accent} compact />
       <div className="game-meta mb-5 mt-3 flex flex-wrap gap-2 font-mono text-[10px] font-bold text-[var(--muted)]">
-        <span className="rounded-md border border-[var(--border)] px-2.5 py-1.5">★ {game.rating} RATING</span>
-        <span className="rounded-md border border-[var(--border)] px-2.5 py-1.5">{game.players.toLocaleString()} PLAYERS</span>
+        <span className="rounded-md border border-[var(--border)] px-2.5 py-1.5">{game.category.toUpperCase()}</span>
         <span className="rounded-md border border-[var(--border)] px-2.5 py-1.5">{game.difficulty.toUpperCase()} MODE</span>
+        <span className="rounded-md border border-[var(--border)] px-2.5 py-1.5">FREE · PLAY IN BROWSER</span>
       </div>
 
       <GameRunner game={game} />
+
+      {/* Ad is outside the game interface: below the board and above the written guide. */}
+      <AdUnit placement="content" format="auto" minHeightClass="min-h-[250px]" className="my-8" />
 
       <div className="mt-8 grid gap-4 lg:grid-cols-3">
         <section className="panel rounded-2xl p-5">
@@ -90,7 +94,9 @@ export default async function GamePage({ params }: { params: Promise<{ slug: str
             genre: game.category,
             applicationCategory: "Game",
             operatingSystem: "Web browser",
-            aggregateRating: { "@type": "AggregateRating", ratingValue: game.rating, ratingCount: game.players },
+            isAccessibleForFree: true,
+            inLanguage: "en",
+            publisher: { "@type": "Organization", name: "Webloom Inc." },
             offers: { "@type": "Offer", price: 0, priceCurrency: "USD" },
           }),
         }}

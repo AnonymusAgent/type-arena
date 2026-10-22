@@ -5,6 +5,7 @@ import ShopClient from "./shop-client";
 export const metadata: Metadata = {
   title: "Rewards Shop — Vehicles, Themes & Cosmetics",
   description: "Spend the coins you earn on vehicles, keyboard skins, profile frames, trails, titles and themes. Cosmetic only — never pay-to-win.",
+  alternates: { canonical: "/shop" },
 };
 
 export default function ShopPage() {

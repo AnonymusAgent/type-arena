@@ -44,10 +44,9 @@ export default function GamesBrowser({ games, initialSort = "popular" }: { games
           onChange={(e) => setSort(e.target.value)}
           className="h-12 rounded-xl border border-[var(--border)] bg-[var(--panel)] px-3 text-sm"
         >
-          <option value="popular">Most popular</option>
+          <option value="popular">Default order</option>
           <option value="newest">Newest</option>
           <option value="difficulty">Easiest first</option>
-          <option value="rating">Highest rated</option>
           <option value="name">A → Z</option>
         </select>
       </div>

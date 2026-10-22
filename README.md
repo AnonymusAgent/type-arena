@@ -126,8 +126,17 @@ Development: `npm run dev`. Type safety: `npx next typegen` then `npm exec tsc -
 | `ADMIN_USERNAME` | optional | Username for the seeded operator account (defaults to `type_arena`). |
 | `ADMIN_EMAIL` | optional | Email for the seeded operator account (defaults to `admin@typearena.gg`). |
 | `SEED_DEMO` | optional | Set to `1` to also seed 15 demo players for local/development testing. |
+| `NEXT_PUBLIC_SITE_URL` | optional | Canonical origin used by metadata, canonicals, `sitemap.xml` and `robots.txt`. Defaults to `https://type-arena-silk.vercel.app`. |
+| `NEXT_PUBLIC_ADSENSE_CLIENT` | optional | Google AdSense publisher ID (`ca-pub-` + 16 digits). Public identifier; default is a placeholder. |
+| `NEXT_PUBLIC_ADSENSE_SLOT_HOME` | optional | Numeric ad-unit slot for the two homepage placements. |
+| `NEXT_PUBLIC_ADSENSE_SLOT_CONTENT` | optional | Numeric ad-unit slot for games, practice and leaderboards. |
+| `NEXT_PUBLIC_ADSENSE_SLOT_RESULTS` | optional | Numeric ad-unit slot for the typing-test results page. |
+| `NEXT_PUBLIC_ADSENSE_ENABLED` | optional | Master switch. Ads only render when this is `"true"` **and** the publisher/slot IDs are valid **and** the visitor consented. Keep `false` until AdSense approval. |
+| `NEXT_PUBLIC_ADSENSE_TEST_MODE` | optional | Forces the inert development placeholder in a production build (preview deployments). Never enable on the public site. |
+| `ADSENSE_ADS_TXT` | optional | Server-only override for the generated `/ads.txt` seller declaration. |
+| `NEXT_PUBLIC_GA_MEASUREMENT_ID` | optional | GA4 measurement ID (`G-XXXXXXXXXX`). Analytics stays off when empty or when consent is withheld. |
 
-No client-side secrets are used; nothing sensitive is exposed to the browser bundle.
+See [`.env.example`](.env.example) for the fully commented template. AdSense publisher IDs and ad-slot IDs are **public**, not secrets — but they are still read from environment variables so nothing has to be edited in source. No client-side secrets are used; nothing sensitive is exposed to the browser bundle.
 
 
 ## 5. Project structure
@@ -331,7 +340,12 @@ Semantic landmarks, one `<h1>` per page, skip link, `aria-current`, `aria-live` 
 Sound is **off by default** and opt-in (`🔊` toggle, persisted to `localStorage`), synthesised with the Web Audio API — no audio downloads.
 
 ## 13. Performance & SEO
-Engines are `next/dynamic` lazy-loaded so the console logic never blocks first paint; the hero image is `priority` with `sizes`; fonts are self-hosted; animation is CSS-only with one shared observer and passive listeners; game pages are SSG via `generateStaticParams`, authenticated/user pages are `force-dynamic`. SEO: title templates, per-page descriptions, canonicals, Open Graph/Twitter metadata, `VideoGame` + `FAQPage` + `WebSite`/`SearchAction` JSON-LD, `sitemap.xml`, `robots.txt`, real URLs and descriptive alt text.
+Engines are `next/dynamic` lazy-loaded so the console logic never blocks first paint; the hero image is `priority` with `sizes`; fonts are self-hosted; animation is CSS-only with one shared observer and passive listeners; game pages are SSG via `generateStaticParams`, authenticated/user pages are `force-dynamic`. SEO: title templates, per-page descriptions, self-referencing canonicals, Open Graph/Twitter metadata, accurate `VideoGame` + `FAQPage` + `WebSite`/`Organization` JSON-LD (no fabricated `aggregateRating`), `sitemap.xml`, `robots.txt`, real URLs and descriptive alt text. The canonical origin comes from `NEXT_PUBLIC_SITE_URL`; previously it was hard-coded to `type-arena.example.com`.
+
+### 13.1 Monetisation, ads and consent
+Google AdSense is integrated with a reusable, consent-gated `AdUnit` (`src/components/ads/ad-unit.tsx`) and a single site-wide loader. Until `NEXT_PUBLIC_ADSENSE_ENABLED=true` **and** real publisher/slot IDs are configured, production renders no ad markup and makes no ad requests; development shows an inert labelled placeholder. Consent is required before the AdSense or GA4 scripts load, and can be changed at `/legal/cookies`. `/ads.txt` is generated from the publisher ID and returns 404 rather than inventing seller entries when it is unset.
+
+Full details — placements, the exact environment variables, manual AdSense review/CMP/ads.txt steps, testing results and rollback — are in [`docs/adsense.md`](docs/adsense.md).
 
 ---
 
