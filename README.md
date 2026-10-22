@@ -110,8 +110,8 @@ Modes: Quick Match (4), 1v1 Duel, Ranked (8), Private Room (editable code + copy
 
 ```bash
 npm install              # install dependencies
-cp .env.example .env     # then set DATABASE_URL
-npx drizzle-kit push     # apply the schema to PostgreSQL
+cp .env.example .env.local   # then set DATABASE_URL (and any AdSense/GA values)
+npm run db:push          # create the schema (additive — see 4.2)
 npm run build && npm run start
 ```
 
@@ -136,12 +136,35 @@ Development: `npm run dev`. Type safety: `npx next typegen` then `npm exec tsc -
 | `ADSENSE_ADS_TXT` | optional | Server-only override for the generated `/ads.txt` seller declaration. |
 | `NEXT_PUBLIC_GA_MEASUREMENT_ID` | optional | GA4 measurement ID (`G-XXXXXXXXXX`). Analytics stays off when empty or when consent is withheld. |
 
-See [`.env.example`](.env.example) for the fully commented template. AdSense publisher IDs and ad-slot IDs are **public**, not secrets — but they are still read from environment variables so nothing has to be edited in source. No client-side secrets are used; nothing sensitive is exposed to the browser bundle.
+See [`.env.example`](.env.example) for the fully commented template. Real values belong in `.env.local` (git-ignored) locally and in Vercel's environment settings in production — never in a committed file.
+
+### 4.2 Database (local Postgres or Neon)
+
+`drizzle.config.ts` reads `DATABASE_URL` with the same precedence Next.js uses — shell environment, then `.env.local`, then `.env` — so one variable drives both the app and the CLI. (It replaced the old `drizzle.config.json`, which hard-coded a localhost URL and could not be pointed at a hosted database.)
+
+**Neon setup**
+
+1. Neon console → **Connect** → enable **Connection pooling** → copy the pooled connection string. It looks like
+   `postgresql://<user>:<password>@<endpoint>-pooler.<region>.aws.neon.tech/<db>?sslmode=require&channel_binding=require`.
+2. Put it in `.env.local` (development) and in **Vercel → Settings → Environment Variables → Production/Preview** (`DATABASE_URL`). Redeploy.
+3. Check connectivity and schema state: `npm run db:check`
+4. Create any missing tables: `npm run db:push`
+
+**Schema policy — additive, never destructive**
+
+`npm run db:push` only applies the difference between `src/db/schema.ts` and the live database: it creates missing tables, columns and indexes, and widens types. It does not truncate tables, and `strict: true` makes it ask for confirmation before anything destructive. Running it against a database that already matches prints *“No changes detected”*. There are no migration files to replay and no drop/recreate step, so an existing Neon database keeps its data.
+
+**Catalogue seeding**
+
+Catalogue rows (games, achievements, challenges, vehicles, tournaments) are inserted automatically on the first request when the `games` table is empty. Demo players are opt-in only (`SEED_DEMO=1`), so a production database is never filled with fake users. An operator account is created only when `ADMIN_PASSWORD` is set. AdSense publisher IDs and ad-slot IDs are **public**, not secrets — but they are still read from environment variables so nothing has to be edited in source. No client-side secrets are used; nothing sensitive is exposed to the browser bundle.
 
 
 ## 5. Project structure
 
 ```
+scripts/
+├── db-check.mjs                 # database inspector: connectivity, tables, row counts
+drizzle.config.ts                # schema push config (reads DATABASE_URL from .env.local/.env)
 src/
 ├── app/
 │   ├── layout.tsx               # root layout, metadata, providers, nav/footer
