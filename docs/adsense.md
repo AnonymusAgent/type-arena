@@ -41,6 +41,8 @@ This document is the single source of truth for the integration: what was built,
 | `src/app/legal/[doc]/cookie-settings.tsx` | Real consent controls (wired to the consent provider). |
 | `src/app/robots.ts`, `src/app/sitemap.ts` | Use the canonical origin; private/auth routes disallowed; sitemap uses real priorities. |
 | `src/lib/data.ts` | `getPlatformStats()` returns real database counts (removed multipliers and invented baselines). |
+| `src/lib/seed.ts` | Empty demo lists are no longer inserted (Drizzle throws on `values([])`), so a database without `SEED_DEMO=1` now seeds completely instead of aborting mid-run. |
+| `next.config.ts`, `public/images/arena-hero.jpg` | Declared the hero image's `quality: 86` and added the missing hero asset referenced by `hero-typing.tsx`. |
 | `README.md` | AdSense/environment documentation. |
 | `src/components/game/game-runner.tsx` | GA4 `game_start` / `game_complete` events (no PII). |
 

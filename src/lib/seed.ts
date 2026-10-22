@@ -168,24 +168,29 @@ export async function seedDatabase() {
       });
     }
   });
-  await db.insert(gameSessions).values(sessionsRows);
+  // Both lists are empty when demo seeding is off (the production default). Drizzle throws
+  // "values() must be called with at least one value", which used to abort the whole seed
+  // and leave later tables unpopulated, so each insert is guarded.
+  if (sessionsRows.length) {
+    await db.insert(gameSessions).values(sessionsRows);
+  }
 
-  await db.insert(userAchievements).values(
-    inserted.slice(0, 8).flatMap((u, i) =>
-      ACHIEVEMENTS.slice(0, 3 + (i % 4)).map((a) => ({
-        userId: u.id,
-        code: a.code,
-        progress: a.goal,
-        unlockedAt: new Date(now - i * 36e5),
-      })),
-    ),
+  const achievementRows = inserted.slice(0, 8).flatMap((u, i) =>
+    ACHIEVEMENTS.slice(0, 3 + (i % 4)).map((a) => ({
+      userId: u.id,
+      code: a.code,
+      progress: a.goal,
+      unlockedAt: new Date(now - i * 36e5),
+    })),
   );
+  if (achievementRows.length) {
+    await db.insert(userAchievements).values(achievementRows);
+  }
 
   const adminId = admin[0]?.id;
   if (adminId && createDemo) {
-    await db.insert(friends).values(
-      inserted.slice(0, 6).map((u) => ({ userId: adminId, friendId: u.id, status: "accepted" })),
-    );
+    const friendRows = inserted.slice(0, 6).map((u) => ({ userId: adminId, friendId: u.id, status: "accepted" }));
+    if (friendRows.length) await db.insert(friends).values(friendRows);
     await db.insert(notifications).values([
       { userId: adminId, kind: "friend", title: "NovaKeys sent a friend request", body: "Accept to compare stats and race together." },
       { userId: adminId, kind: "achievement", title: "Achievement unlocked: Speed Demon", body: "You reached 60 WPM. +250 XP" },
