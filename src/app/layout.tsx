@@ -11,6 +11,7 @@ import { Providers } from "@/components/providers";
 import Navbar from "@/components/navbar";
 import BottomNav from "@/components/bottom-nav";
 import Footer from "@/components/footer";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://type-arena.example.com"),
@@ -57,6 +58,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           <Footer />
           <BottomNav />
         </Providers>
+        <SpeedInsights />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
